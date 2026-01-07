@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug RainfallEditor",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Editor/RainfallEditor",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "preLaunchTask": "Build RainfallEditor"
+    }
+  ]
+}
