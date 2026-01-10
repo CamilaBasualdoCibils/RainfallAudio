@@ -1,0 +1,31 @@
+
+{
+  "name": "gpu-x11-dev",
+  "image": "nvidia/cuda:12.4.1-devel-ubuntu26.04",
+  "build": {
+		"dockerfile": "Dockerfile"
+	},
+  //"onCreateCommand": "bash ./.devcontainer/OpenGL.sh && bash ./.devcontainer/Boost.sh",
+  "runArgs": [
+    "--gpus=all",
+    "--env=DISPLAY",
+    "--env=NVIDIA_DRIVER_CAPABILITIES=all",
+    "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw"
+  ],
+
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "ms-azuretools.vscode-containers",
+        "ms-vscode.cpptools-extension-pack",
+        "llvm-vs-code-extensions.vscode-clangd"
+      ]
+    }
+  }
+}

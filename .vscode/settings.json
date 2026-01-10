@@ -1,6 +1,9 @@
 {
-    "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
-    "nixEnvSelector.useFlakes": true,
     "C_Cpp.intelliSenseEngine": "disabled",
-    "C_Cpp."
+    "cmake.debugConfig": {
+  "MIMode": "gdb",
+  "miDebuggerPath": "/usr/bin/gdb",
+  "args": []
+
+    }
 }

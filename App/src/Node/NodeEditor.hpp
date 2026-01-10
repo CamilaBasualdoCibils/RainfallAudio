@@ -1,0 +1,51 @@
+#pragma once
+#include "GL.hpp"
+#include "Node.hpp"
+#include "glm/fwd.hpp"
+#include "imgui.h"
+#include <any>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index_container.hpp>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
+static ImVec4 rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    return ImVec4{r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+}
+static ImVec4 rgb(uint8_t r, uint8_t g, uint8_t b)
+{
+    return ImVec4{r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
+}
+class NodeEditor
+{
+    // std::unordered_map<uint32_t, std::any> nodes;
+    ImVec4 BackgroundColor = rgb(20, 20, 20);
+    ImVec4 LineColor = rgb(126, 126, 126);
+
+    glm::vec2 CameraLocation = {0, 0};
+    float CameraScaleX = 10;
+    float CameraScaleX_target = 10;
+    const glm::vec2 CameraScaleRange = {5, 100};
+    glm::mat3 World2Screen, Screen2World;
+    boost::multi_index_container<
+        std::shared_ptr<Node>,
+        boost::multi_index::indexed_by<boost::multi_index::sequenced<>
+                                       // boost::multi_index::hashed_non_unique<boost::multi_index::tag<NodeByType>,
+                                       // NodeTypeExtractor>
+                                       >>
+        nodes;
+
+  public:
+    NodeEditor() = default;
+    bool Draw(const std::string_view label, ImVec2 size = {0, -1});
+
+  private:
+    void Controls();
+    void DrawNodes();
+    void AddNode(std::shared_ptr<Node> node);
+    template <typename T> void AddNode() { AddNode(std::make_shared<T>()); }
+};
