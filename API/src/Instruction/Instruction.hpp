@@ -1,25 +1,36 @@
 #pragma once
 
-#include "Instruction/Value.hpp"
-#include "Value.hpp"
-#include "boost/container/container_fwd.hpp"
+#include <Variable/Variable.hpp>
+
+#include "boost/container/small_vector.hpp"
 #include <memory>
 #include <string_view>
 class IInstruction
 {
 
+    std::string Name;
+
   protected:
     template <typename T> void AddInput(const std::string_view Name)
     {
-        std::shared_ptr<Value<T>> value = std::make_shared<Value<T>>();
+        std::shared_ptr<Variable<T>> var = std::make_shared<Variable<T>>(Name);
+        inputs.push_back(var);
     }
-    template <typename T> void AddOutput(const std::string_view Name) {}
+    template <typename T> void AddOutput(const std::string_view Name)
+    {
+        std::shared_ptr<Variable<T>> var = std::make_shared<Variable<T>>(Name);
+        outputs.push_back(var);
+    }
 
-    boost::container::small_vector<std::shared_ptr<IValue>, 15> inputs;
-    boost::container::small_vector<std::shared_ptr<IValue>, 15> outputs;
+  public:
+    IInstruction(const std::string_view Name) : Name(Name) {}
+
+  private:
+    boost::container::small_vector<std::shared_ptr<IVariable>, 15> inputs;
+    boost::container::small_vector<std::shared_ptr<IVariable>, 15> outputs;
 };
 
-template <typename InputTypes, typename OutputTypes> class Instruction
+class Instruction
 {
 
   public:

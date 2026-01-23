@@ -35,6 +35,7 @@ target_link_libraries(${API_NAME}
         Boost::bimap
         Boost::math
         Boost::static_string
+        Boost::graph
 )
 
 # --- Optional compile flags from pkg-config ---

@@ -2,7 +2,7 @@
 
 #include <string>
 
-class IValue
+struct IValue
 {
 
   public:
@@ -15,7 +15,7 @@ class IValue
     std::string name;
 };
 
-template <typename T> class Value
+template <typename T> struct Value
 {
   public:
     Value(const std::string_view name) : Value(name) {}

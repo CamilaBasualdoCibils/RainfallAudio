@@ -9,18 +9,19 @@
 #include <iostream>
 #include <qpoint.h>
 
-class WaveGeneratorNode : public AudioNode
+class OscillatorNode : public AudioNode
 {
     std::shared_ptr<Port<AudioStream>> OutputPort;
+
   public:
-    WaveGeneratorNode(NodeFlow *flow,NodeID id) : AudioNode(flow,id)
+    OscillatorNode(NodeFlow *flow, NodeID id) : AudioNode(flow, id)
     {
         OutputPort = AddPort<AudioStream>();
-        OutputPort->setPos(QPointF{-boundingRect().x(),0});
+        OutputPort->setPos(QPointF{-boundingRect().x(), 0});
         OutputPort->SetDirection(PortDir::eOutput);
         // AddOutput<AudioStream>("Output");
         // AddInput<AudioStream>("Input");
     }
-    ~WaveGeneratorNode() = default;
+    ~OscillatorNode() = default;
 };
-REGISTER_NODE(WaveGeneratorNode, "Wave Generator", "");
+REGISTER_NODE(OscillatorNode, "Oscillator", "");

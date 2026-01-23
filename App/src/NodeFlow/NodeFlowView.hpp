@@ -84,6 +84,14 @@ class NodeFlowView : public QGraphicsView
                 {
                     if (IPort* port = dynamic_cast<IPort *>(item);port)
                     {
+                        if (port->GetDirection() == PortDir::eInput)
+                        {
+                            parentFlow->DisconnectAllAtPort(port->GetRef());
+                        }
+                        else
+                        {
+                            parentFlow->DisconnectAllAtPort(NodeInitialConnection->GetRef());
+                        }
                         parentFlow->AddConnection(PortRef{port->GetParentID(),port->GetID()},PortRef{NodeInitialConnection->GetParentID(),NodeInitialConnection->GetID()});
                     }
                 }

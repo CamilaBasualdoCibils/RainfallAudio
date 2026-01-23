@@ -1,8 +1,0 @@
-#include "OldNode.hpp" 
-#include "glm/fwd.hpp"
-#include "imgui.h"
-void OldNode::DrawNode(){
-
-    DrawPreview();
-}
-

@@ -38,6 +38,47 @@ class NodeFlow : public QGraphicsScene
         addItem(conn.get());
     }
 
+    void GetConnectionsAtPort(PortRef p,
+                              std::vector<std::shared_ptr<const Connection>> &out_connections) const
+    {
+        out_connections.clear();
+        for (const auto &seq = connections.get<ConnectionByFrom>();
+             const std::shared_ptr<const Connection> conn : seq)
+        {
+            const auto range = seq.equal_range(p);
+            for (auto it = range.first; it != range.second; it++)
+            {
+                out_connections.push_back(*it);
+            }
+        }
+        for (const auto &seq = connections.get<ConnectionByTo>();
+             const std::shared_ptr<const Connection> conn : seq)
+        {
+            const auto range = seq.equal_range(p);
+            for (auto it = range.first; it != range.second; it++)
+            {
+                out_connections.push_back(*it);
+            }
+        }
+    }
+
+    void DisconnectAllAtPort(PortRef p)
+    {
+        auto &from_index = connections.get<ConnectionByFrom>();
+        auto from_range = from_index.equal_range(p);
+        for (auto it = from_range.first; it != from_range.second;)
+        {
+            it = from_index.erase(it); // safe: returns next iterator
+        }
+
+        auto &to_index = connections.get<ConnectionByTo>();
+        auto to_range = to_index.equal_range(p);
+        for (auto it = to_range.first; it != to_range.second;)
+        {
+            it = to_index.erase(it); // safe: returns next iterator
+        }
+    }
+
   private:
     struct ConnectionByFrom
     {
