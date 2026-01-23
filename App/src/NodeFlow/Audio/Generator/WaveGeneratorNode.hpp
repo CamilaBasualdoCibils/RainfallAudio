@@ -7,14 +7,17 @@
 #include "NodeFlow/RegisterNode.hpp"
 #include "imgui.h"
 #include <iostream>
+#include <qpoint.h>
 
 class WaveGeneratorNode : public AudioNode
 {
     std::shared_ptr<Port<AudioStream>> OutputPort;
   public:
-    WaveGeneratorNode(NodeFlow *nf) : AudioNode(nf)
+    WaveGeneratorNode(NodeFlow *flow,NodeID id) : AudioNode(flow,id)
     {
         OutputPort = AddPort<AudioStream>();
+        OutputPort->setPos(QPointF{-boundingRect().x(),0});
+        OutputPort->SetDirection(PortDir::eOutput);
         // AddOutput<AudioStream>("Output");
         // AddInput<AudioStream>("Input");
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "NodeFlow/IDs.hpp"
 #include "boost/multi_index/hashed_index.hpp"
 #include "misc/Singleton.hpp"
 #include <NodeFlow/Node.hpp>
@@ -17,7 +18,7 @@ class NodeRegistry : public Singleton<NodeRegistry>
   public:
     struct NodeEntry
     {
-        using CreateFunc = std::function<std::shared_ptr<Node>(NodeFlow *)>;
+        using CreateFunc = std::function<std::shared_ptr<Node>(NodeFlow *,NodeID)>;
         NodeEntry(const std::string_view Name, const std::string_view Icon,
                   std::type_index type_index, CreateFunc createFunc)
             : Name(Name), Icon(Icon), type_index(type_index), Create(createFunc)
@@ -51,7 +52,7 @@ class NodeRegistry : public Singleton<NodeRegistry>
     bool RegisterNode(const std::string_view Name, const std::string_view Icon)
     {
         NodeEntry entry =
-            NodeEntry(Name, Icon, typeid(T), [](NodeFlow *nf) { return std::make_shared<T>(nf); });
+            NodeEntry(Name, Icon, typeid(T), [](NodeFlow *nf,NodeID id) { return std::make_shared<T>(nf,id); });
 
         node_registry.insert(entry);
         return true;

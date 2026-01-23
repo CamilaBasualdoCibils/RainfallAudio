@@ -49,10 +49,6 @@ int RainfallEditor::Run(int &argc, char **argv)
     NodeFlow *nodeflow = new NodeFlow(&window);
     nodeflow->setSceneRect(-500, -500, 1000, 1000);
 
-    // Add some example nodes
-    nodeflow->addRect(-40, -20, 80, 40, QPen(Qt::blue), QBrush(Qt::cyan));
-    nodeflow->addRect(100, 100, 80, 40, QPen(Qt::blue), QBrush(Qt::cyan));
-
     NodeFlowView *view = new NodeFlowView(nodeflow, &window);
     window.setCentralWidget(view);
     view->setWindowTitle("Qt Node Editor Example");
@@ -60,14 +56,14 @@ int RainfallEditor::Run(int &argc, char **argv)
     view->show();
     window.show();
 
-    QMainWindow *window2 = new QMainWindow();
-    NodeFlowView *view2 = new NodeFlowView(nodeflow, window2);
-    view2->setRenderHint(QPainter::Antialiasing);
-    window2->setCentralWidget(view2);
-    window2->setWindowTitle("Node Editor Window 2");
-    window2->resize(800, 600);
-    window2->move(850, 50); // offset so it doesn't cover the first window
-    window2->show();
+    //QMainWindow *window2 = new QMainWindow();
+    //NodeFlowView *view2 = new NodeFlowView(nodeflow, window2);
+    //view2->setRenderHint(QPainter::Antialiasing);
+    //window2->setCentralWidget(view2);
+    //window2->setWindowTitle("Node Editor Window 2");
+    //window2->resize(800, 600);
+    //window2->move(850, 50); // offset so it doesn't cover the first window
+    //window2->show();
 
     return app.exec();
 }

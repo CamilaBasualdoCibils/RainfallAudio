@@ -1,15 +1,22 @@
 #pragma once
+#include "NodeFlow/IDs.hpp"
 #include "NodeFlow/NodeFlow.hpp"
+#include "NodeFlow/Port.hpp"
 #include <QGraphicsView>
 #include <QMouseEvent>
 #include <QTimer>
+#include <qdebug.h>
+#include <qlogging.h>
 #include <qnamespace.h>
+#include <qpoint.h>
 
 class NodeFlowView : public QGraphicsView
 {
-    NodeFlow* parentFlow;
+    NodeFlow *parentFlow;
+
   public:
-    NodeFlowView(NodeFlow* nodeFlow, QWidget *parent = nullptr) : QGraphicsView(nodeFlow, parent),parentFlow(nodeFlow)
+    NodeFlowView(NodeFlow *nodeFlow, QWidget *parent = nullptr)
+        : QGraphicsView(nodeFlow, parent), parentFlow(nodeFlow)
     {
         setRenderHint(QPainter::Antialiasing);
         setDragMode(QGraphicsView::NoDrag);
@@ -22,7 +29,21 @@ class NodeFlowView : public QGraphicsView
   protected:
     void mousePressEvent(QMouseEvent *event) override
     {
-        if (event->button() == Qt::MiddleButton)
+        if (event->button() == Qt::LeftButton)
+        {
+            QPointF scenePos = mapToScene(event->pos());
+
+            QGraphicsItem *item = scene()->itemAt(scenePos, transform());
+            if (item)
+            {
+                if (IPort* port = dynamic_cast<IPort *>(item);port)
+                {
+                    qDebug() << "Port Clicked";
+                    NodeInitialConnection = port;
+                }
+            }
+        }
+        else if (event->button() == Qt::MiddleButton)
         {
             m_lastPanPoint = event->pos();
             setCursor(Qt::ClosedHandCursor);
@@ -36,18 +57,41 @@ class NodeFlowView : public QGraphicsView
 
     void mouseMoveEvent(QMouseEvent *event) override
     {
+        QPointF scenePos = mapToScene(event->pos());
         if (!m_lastPanPoint.isNull())
         {
-            QPointF delta = mapToScene(m_lastPanPoint) - mapToScene(event->pos());
+            QPointF delta = mapToScene(m_lastPanPoint) - scenePos;
             translate(delta.x(), delta.y());
             m_lastPanPoint = event->pos();
+        }
+        if (NodeInitialConnection)
+        {
+            DragLineEnd = scenePos;
+            viewport()->update();
         }
         QGraphicsView::mouseMoveEvent(event);
     }
 
     void mouseReleaseEvent(QMouseEvent *event) override
     {
-        if (event->button() == Qt::MiddleButton)
+        if (event->button() == Qt::LeftButton)
+        {
+            if (NodeInitialConnection)
+            {
+                QPointF scenePos = mapToScene(event->pos());
+                QGraphicsItem *item = scene()->itemAt(scenePos, transform());
+                if (item)
+                {
+                    if (IPort* port = dynamic_cast<IPort *>(item);port)
+                    {
+                        parentFlow->AddConnection(PortRef{port->GetParentID(),port->GetID()},PortRef{NodeInitialConnection->GetParentID(),NodeInitialConnection->GetID()});
+                    }
+                }
+                NodeInitialConnection = nullptr;
+                viewport()->update();
+            }
+        }
+        else if (event->button() == Qt::MiddleButton)
         {
             m_lastPanPoint = QPoint();
             setCursor(Qt::ArrowCursor);
@@ -66,9 +110,10 @@ class NodeFlowView : public QGraphicsView
         // Clamp zoom
         m_targetScale = std::clamp(m_targetScale, 0.1, 10.0);
     }
-   
+
     void drawBackground(QPainter *painter, const QRectF &rect) override
     {
+        return;
         // Draw a grid
         constexpr int gridSize = 50;
         QPen pen(Qt::lightGray);
@@ -87,7 +132,18 @@ class NodeFlowView : public QGraphicsView
         for (int y = top; y < bottom; y += gridSize)
             painter->drawLine(QPointF(rect.left(), y), QPointF(rect.right(), y));
     }
- private:
+
+    void drawForeground(QPainter *painter, const QRectF &rect) override
+    {
+        if (NodeInitialConnection)
+        {
+            painter->setPen(QPen(Qt::yellow, 2, Qt::DashLine));
+            QPointF start = NodeInitialConnection->sceneBoundingRect().center();
+            painter->drawLine(start, DragLineEnd);
+        }
+    }
+
+  private:
     void updateZoom()
     {
         // Smooth interpolation
@@ -105,4 +161,7 @@ class NodeFlowView : public QGraphicsView
     double m_targetScale = 1.0;  // Zoom we want
     double m_currentScale = 1.0; // Actual current zoom
     QTimer m_zoomTimer;
+
+    IPort *NodeInitialConnection = nullptr;
+    QPointF DragLineEnd;
 };

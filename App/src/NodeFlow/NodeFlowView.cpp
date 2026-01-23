@@ -13,8 +13,9 @@ void NodeFlowView::ShowNodesContextMenu(const QPoint &pos)
             connect(action, &QAction::triggered,
                     [&]()
                     {
-                        std::shared_ptr<Node> node = e.Create(parentFlow);
-                        node->setPos(mapToScene(pos) );
+                        std::shared_ptr<Node> node =
+                            e.Create(parentFlow, parentFlow->ReserveNodeID());
+                        node->setPos(mapToScene(pos));
                         parentFlow->AddNode(node);
 
                         // auto it = m_callbacks.find(nodeName);

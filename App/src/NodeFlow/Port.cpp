@@ -2,20 +2,23 @@
 #include "NodeFlow/Node.hpp"
 #include <QPainter>
 #include <QWidget>
-
-IPort::IPort(Node *parentNode) : QGraphicsItem(parentNode), parentNode(parentNode) {}
+#include <qnamespace.h>
+#include <qpoint.h>
+#include <qvectornd.h>
+#include "NodeFlow.hpp"
+IPort::IPort(NodeFlow *flow, NodeID parentID,PortID ID) : QGraphicsItem(flow->GetNode(parentID).get()), flow(flow),ParentID(parentID),ID(ID) {
+    setAcceptedMouseButtons(Qt::LeftButton);
+}
 void IPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
     // Background
-    painter->setBrush(isSelected() ? Qt::yellow : Qt::cyan);
+    painter->setBrush(Qt::white);
     painter->setPen(QPen(Qt::blue, 2));
-    painter->drawRoundedRect(boundingRect(), 5, 5);
-
-    // Title text
-    painter->setPen(Qt::black);
-    painter->drawText(boundingRect().adjusted(5, 5, -5, -5), Qt::AlignLeft | Qt::AlignTop, "ass");
+    painter->drawRoundedRect(boundingRect(), 1, 1);
+  
 }
 QRectF IPort::boundingRect() const
 {
-    return QRectF(0, 0, 10, 10); // width 120, height 60
+    QPointF size = {10,10};
+    return QRectF(-size/2.0f, size); // width 120, height 60
 }

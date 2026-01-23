@@ -4,6 +4,6 @@
 class AudioNode : public Node
 {
     public:
-    AudioNode(NodeFlow* nf):Node(nf){}
+    AudioNode(NodeFlow *flow,NodeID id):Node(flow,id){}
 
 };

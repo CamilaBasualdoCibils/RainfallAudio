@@ -55,8 +55,6 @@ class NodeFlowView
         std::shared_ptr<Node>,
         boost::multi_index::indexed_by<
             boost::multi_index::sequenced<>
-            // boost::multi_index::hashed_non_unique<boost::multi_index::tag<NodeByType>,
-            // NodeTypeExtractor>
             >>
         nodes;
 };
