@@ -1,0 +1,337 @@
+#include "NodeEditor.hpp"
+#include "Node/Node.hpp"
+#include "Node/NodeRegistry.hpp"
+#include "RainfallEditor.hpp"
+#include "glm/common.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
+#include "glm/matrix.hpp"
+#include "imgui.h"
+#include "imgui_internal.h"
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <sstream>
+#include <string>
+void NodeEditor::CameraControls()
+{
+    ImGuiIO &io = ImGui::GetIO();
+    CameraScaleX_target += -io.MouseWheel * (CameraScaleX * 0.3f);
+    CameraScaleX_target = glm::clamp(CameraScaleX_target, 0.25f, 5.0f);
+    CameraScaleX =
+        std::lerp(CameraScaleX, CameraScaleX_target, RainfallEditor::Get().GetDeltaTime() * 20.0f);
+
+    if (node_editorWindow->Rect().Contains(ImGui::GetMousePos()) &&
+        ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
+    {
+
+        ImVec2 delta = io.MouseDelta;
+
+        CameraPos -= Screen2Map(delta / 2.0f, true, false);
+    }
+}
+
+bool NodeEditor::Draw(const std::string_view label, ImVec2 size)
+{
+    ImGuiWindow *window = ImGui::GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+    if (ImGui::BeginChild(label.data(), {0, 0},
+                          ImGuiChildFlags_Borders | ImGuiChildFlags_NavFlattened,
+                          ImGuiWindowFlags_NoScrollbar))
+    {
+        node_editorWindow = ImGui::GetCurrentWindow();
+        CameraControls();
+        DrawNodes();
+        NodeSearch();
+    }
+
+    ImGui::EndChild();
+    return true;
+    /*
+
+    float targetStep =
+        CameraScaleX / 5.0f; // heuristic: ~5 lines across half-view
+
+    float exponent = std::floor(glm::log2(targetStep));
+    float step = glm::pow(2.0f, exponent);
+
+    glm::ivec2 Start = glm::floor(WorldMin / step);
+    glm::ivec2 End = glm::ceil(WorldMax / step);
+    // Draw vertical lines
+    for (int i = Start.x; i <= End.x; i++)
+    {
+        float x = (World2Screen * glm::vec3(i * step, 0, 1.0f)).x;
+        // float x = WorldToScreenX(i * step);
+        draw->AddLine(ImVec2(x, bb.Min.y), ImVec2(x, bb.Max.y),
+                      ImGui::GetColorU32(LineColor));
+    }
+
+    // Draw horizontal lines
+    for (int i = Start.y; i <= End.y; i++)
+    {
+
+        float y = (World2Screen * glm::vec3(0, i * step, 1.0f)).y;
+        draw->AddLine(ImVec2(bb.Min.x, y), ImVec2(bb.Max.x, y),
+                      ImGui::GetColorU32(LineColor));
+    }*/
+}
+void NodeEditor::NodeSearch()
+{
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+    {
+        ImGui::OpenPopup("AddNodeList");
+    }
+    if (ImGui::BeginPopup("AddNodeList"))
+    {
+        static char search[128] = "";
+
+        // Optional: auto-focus when popup opens
+        if (ImGui::IsWindowAppearing())
+            ImGui::SetKeyboardFocusHere();
+
+        ImGui::TextUnformatted("Search");
+
+        ImGui::InputTextWithHint("##search", "Type to search...", search, IM_ARRAYSIZE(search));
+
+        ImGui::Separator();
+        std::vector<NodeRegistry::NodeEntry> nodeTypes;
+
+        NodeRegistry::Get().ForEach_NodeType([&](const NodeRegistry::NodeEntry &e)
+                                             { nodeTypes.push_back(e); });
+        for (const auto &nodeType : nodeTypes)
+        {
+            if (ImGui::Selectable(nodeType.Name.c_str()))
+            {
+                std::shared_ptr<Node> newnode = nodeType.Create();
+
+                std::shared_ptr<GraphNode> gn = std::make_shared<GraphNode>();
+                gn->node = newnode;
+                const ImVec2 mouse_pos = ImGui::GetMousePos();
+                gn->position = Screen2Map(mouse_pos, false);
+                nodes.push_back(gn);
+
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+void NodeEditor::DrawNodes()
+{
+    auto style = ImGui::GetStyle();
+    const float mult = 1.0f / CameraScaleX;
+
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.WindowPadding * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style.WindowRounding * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, style.WindowBorderSize * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, style.WindowMinSize * mult);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, style.ChildRounding * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, style.ChildBorderSize * mult);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, style.PopupRounding * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, style.PopupBorderSize * mult);
+
+        // ---- Frames / Widgets ----
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.FramePadding * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.FrameRounding * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, style.FrameBorderSize * mult);
+
+        // ---- Layout ----
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, style.ItemSpacing * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, style.ItemInnerSpacing * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, style.IndentSpacing * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, style.CellPadding * mult);
+
+        // ---- Scrollbars ----
+        ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, style.ScrollbarSize * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarRounding, style.ScrollbarRounding * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarPadding, style.ScrollbarPadding * mult);
+
+        // ---- Sliders / Grabs ----
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, style.GrabMinSize * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, style.GrabRounding * mult);
+
+        // ---- Images ----
+        ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize, style.ImageBorderSize * mult);
+
+        // ---- Tabs ----
+        ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, style.TabRounding * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_TabBorderSize, style.TabBorderSize * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_TabMinWidthBase, style.TabMinWidthBase * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_TabMinWidthShrink, style.TabMinWidthShrink * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_TabBarBorderSize, style.TabBarBorderSize * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_TabBarOverlineSize, style.TabBarOverlineSize * mult);
+
+        // ---- Tables / Trees ----
+        ImGui::PushStyleVar(ImGuiStyleVar_TreeLinesSize, style.TreeLinesSize * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_TreeLinesRounding, style.TreeLinesRounding * mult);
+
+        // ---- Separators ----
+        ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize,
+                            style.SeparatorTextBorderSize * mult);
+        ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextPadding, style.SeparatorTextPadding * mult);
+
+        // ---- Docking ----
+        ImGui::PushStyleVar(ImGuiStyleVar_DockingSeparatorSize, style.DockingSeparatorSize * mult);
+    }
+    // ImGui::GetCurrentWindow()->ItemWidthDefault/=mult;
+
+    // ImGui::GetCurrentWindow()->FontWindowScale*=mult;
+
+    ImGui::PushFont(ImGui::GetFont(), ImGui::GetFontSize() * mult);
+    int i = 1;
+
+    for (auto it = nodes.begin(); it != nodes.end(); it++)
+    {
+        nodes.modify(it,
+                     [&](std::shared_ptr<GraphNode> &gnode)
+                     {
+                         std::shared_ptr<Node> node = gnode->node;
+
+                         const float NodeSize = 0.2;
+                         const float NodeSizecLOSED = 0.05;
+                         ImVec2 nodeSize =
+                             Map2Screen(gnode->Open ? ImVec2{NodeSize, NodeSize}
+                                                    : ImVec2{NodeSize, NodeSizecLOSED},
+                                        true, false);
+                         ImVec2 nodePos = Map2Screen(gnode->position, false);
+
+                         ImGui::SetNextWindowPos(nodePos, ImGuiCond_Always, {0.5, 0.5});
+                         if (ImGui::BeginChild(
+                                 i, nodeSize, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY,
+                                 ImGuiWindowFlags_NoScrollbar))
+                         {
+
+                             DrawGraphNode(*gnode);
+
+                             if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) &&
+                                 ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) &&
+                                 ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+                             {
+                                 gnode->position = Screen2Map(ImGui::GetMousePos(), false, true);
+                             }
+                         }
+                         ImGui::EndChild();
+                     });
+
+        i++;
+    }
+    ImGui::PopFont();
+    ImGui::PopStyleVar(32);
+}
+ImVec2 NodeEditor::Map2Screen(ImVec2 v, bool dirOnly, bool apply_aspect_ration)
+{
+    ImVec2 screenPos = node_editorWindow->Pos;
+    ImVec2 screenSize = node_editorWindow->Size;
+    ImVec2 screenCenter = screenPos + screenSize * 0.5f;
+    float aspectRation = screenSize.x / screenSize.y;
+    float pixelsPerUnit = screenSize.x / CameraScaleX;
+    v /= 2.0f;
+    if (apply_aspect_ration)
+    {
+
+        v.y /= aspectRation;
+    }
+    if (!dirOnly)
+    {
+        v.x -= CameraPos.x;
+        v.y -= CameraPos.y;
+    }
+
+    // scale
+    v.x *= pixelsPerUnit;
+    v.y *= pixelsPerUnit;
+
+    if (!dirOnly)
+        v += screenCenter;
+
+    return v;
+}
+ImVec2 NodeEditor::Screen2Map(ImVec2 v, bool dirOnly, bool apply_aspect_ration)
+{
+
+    ImVec2 screenPos = node_editorWindow->Pos;
+    ImVec2 screenSize = node_editorWindow->Size;
+    ImVec2 screenCenter = screenPos + screenSize * 0.5f;
+    float aspectRation = screenSize.x / screenSize.y;
+
+    float unitsPerPixel = CameraScaleX / screenSize.x;
+
+    if (!dirOnly)
+        v -= screenCenter;
+
+    // scale
+    v.x *= unitsPerPixel;
+    v.y *= unitsPerPixel;
+
+    if (!dirOnly)
+    {
+        v.x += CameraPos.x;
+        v.y += CameraPos.y;
+    }
+    if (apply_aspect_ration)
+    {
+
+        v.y *= aspectRation;
+    }
+    return v * 2;
+}
+void NodeEditor::DrawGraphNode(GraphNode &node)
+{
+    const auto NodeRect = ImGui::GetCurrentWindow()->Rect();
+
+    const uint32_t inputCount = node.node->GetInputCount(),
+                   OutputCount = node.node->GetOutputCount();
+    const float InputStep = NodeRect.GetHeight() / (inputCount + 1),
+                OutputStep = NodeRect.GetHeight() / (OutputCount + 1);
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    const ImVec2 InputPinStart = ImGui::GetWindowPos(),
+                 OutputPinStart = InputPinStart + ImVec2{NodeRect.GetWidth(), 0};
+    int i = 0;
+    node.node->ForEach_Input(
+        [&](const Node::IPin &pin)
+        {
+            draw_list->AddCircleFilled(InputPinStart + ImVec2{0, InputStep * (i + 1)}, 5,
+                                       ImGui::GetColorU32(ImVec4{1, 1, 1, 1}));
+            i++;
+        });
+
+    if (ImGui::BeginChild("Contents", {0, 0}, ImGuiChildFlags_Borders))
+    {
+
+        // std::printf("%.1f\n",CameraScaleX);
+        const ImVec2 AvailSpace = ImGui::GetContentRegionAvail();
+        ImDrawList *drawlist = ImGui::GetWindowDrawList();
+        drawlist->ChannelsSplit(2);
+        drawlist->ChannelsSetCurrent(1);
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("open/close", node.Open ? ImGuiDir_Down : ImGuiDir_Right))
+        {
+            node.Open = !node.Open;
+        }
+        ImGui::SameLine();
+        ImGui::Text("%s", node.node->GetTitle().c_str());
+        ImGui::EndGroup();
+        const float HeaderEnd = ImGui::GetItemRectMin().y;
+        drawlist->ChannelsSetCurrent(0);
+        const float windowSizeX = ImGui::GetWindowSize().x;
+        const ImVec2 windowpos = ImGui::GetWindowPos();
+        drawlist->AddRectFilled(windowpos,
+                                {windowpos.x + windowSizeX,
+                                 ImGui::GetItemRectMax().y + ImGui::GetStyle().ItemSpacing.y},
+                                ImGui::GetColorU32(rgb(161, 41, 41)));
+        drawlist->ChannelsMerge();
+        if (node.Open)
+        {
+            ImGui::Separator();
+            node.node->DrawNode();
+        }
+    }
+    ImGui::EndChild();
+}

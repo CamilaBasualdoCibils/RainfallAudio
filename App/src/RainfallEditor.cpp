@@ -2,30 +2,72 @@
 #include "RainfallEditor.hpp"
 
 #include "GUI/GUI.hpp"
+#include "NodeFlow/Node.hpp"
+#include "NodeFlow/NodeFlowView.hpp"
 #include "imgui.h"
 #include <iostream>
+#include <qgraphicsscene.h>
+#include <qwindowdefs.h>
 #include <stdexcept>
 
-RainfallEditor::RainfallEditor() : AppWindow(1920, 1080, "Rainfall Editor") {}
-void RainfallEditor::Run()
+#include <NodeFlow/NodeFlow.hpp>
+#include <QApplication>
+#include <QMainWindow>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QWidget>
+#include <QWindow>
+RainfallEditor::RainfallEditor() {}
+int RainfallEditor::Run(int &argc, char **argv)
 {
-    if (!Init())
-        throw std::runtime_error("");
-    using Clock = std::chrono::high_resolution_clock;
+    QApplication app(argc, argv);
 
-    auto lastTime = Clock::now();
-    while (!ShouldClose())
-    {
-        auto currentTime = Clock::now();
-        std::chrono::duration<double> delta = currentTime - lastTime;
-        DeltaTime = delta.count(); // seconds
-        lastTime = currentTime;
+    // Create main window
+    QMainWindow window;
+    window.setWindowTitle("Qt6 Menu Example");
+    window.resize(1270, 800);
 
-        PollEvents();
-        BeginFrame();
-        ImGui::ShowDemoWindow();
-        GUI::Get().Draw();
+    // Create a menu bar
+    QMenuBar *menuBar = window.menuBar();
 
-        EndFrame();
-    }
+    // Add a "File" menu
+    QMenu *fileMenu = menuBar->addMenu("File");
+
+    // Add actions to the File menu
+    QAction *newAction = new QAction("New", &window);
+    QAction *exitAction = new QAction("Exit", &window);
+
+    fileMenu->addAction(newAction);
+    fileMenu->addSeparator(); // optional separator
+    fileMenu->addAction(exitAction);
+
+    // Connect actions
+    QObject::connect(newAction, &QAction::triggered,
+                     [&]() { QMessageBox::information(&window, "New", "New action triggered!"); });
+    QObject::connect(exitAction, &QAction::triggered, &app, &QApplication::quit);
+
+    NodeFlow *nodeflow = new NodeFlow(&window);
+    nodeflow->setSceneRect(-500, -500, 1000, 1000);
+
+    // Add some example nodes
+    nodeflow->addRect(-40, -20, 80, 40, QPen(Qt::blue), QBrush(Qt::cyan));
+    nodeflow->addRect(100, 100, 80, 40, QPen(Qt::blue), QBrush(Qt::cyan));
+
+    NodeFlowView *view = new NodeFlowView(nodeflow, &window);
+    window.setCentralWidget(view);
+    view->setWindowTitle("Qt Node Editor Example");
+    view->resize(800, 600);
+    view->show();
+    window.show();
+
+    QMainWindow *window2 = new QMainWindow();
+    NodeFlowView *view2 = new NodeFlowView(nodeflow, window2);
+    view2->setRenderHint(QPainter::Antialiasing);
+    window2->setCentralWidget(view2);
+    window2->setWindowTitle("Node Editor Window 2");
+    window2->resize(800, 600);
+    window2->move(850, 50); // offset so it doesn't cover the first window
+    window2->show();
+
+    return app.exec();
 }

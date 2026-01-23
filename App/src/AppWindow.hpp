@@ -33,10 +33,7 @@ class AppWindow
         return true;
     }
 
-    bool ShouldClose() const
-    {
-        return m_window && glfwWindowShouldClose(m_window);
-    }
+    bool ShouldClose() const { return m_window && glfwWindowShouldClose(m_window); }
 
     void PollEvents() const { glfwPollEvents(); }
 
@@ -90,8 +87,7 @@ class AppWindow
         glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-        m_window =
-            glfwCreateWindow(m_width, m_height, m_title, nullptr, nullptr);
+        m_window = glfwCreateWindow(m_width, m_height, m_title, nullptr, nullptr);
         if (!m_window)
         {
             std::cerr << "Failed to create GLFW window\n";
@@ -144,7 +140,7 @@ class AppWindow
         style.ScrollbarSize = style.ScrollbarSize * scale;
         style.GrabMinSize = style.GrabMinSize * scale;
         ImFontConfig fc;
-        fc.SizePixels = 16.0f*scale;
+        fc.SizePixels = 16.0f * scale;
         ImGui::GetIO().Fonts->AddFontDefault(&fc);
         return true;
     }
@@ -153,8 +149,8 @@ class AppWindow
     {
         OnShutdown();
 
-        ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
+        ImGui_ImplOpenGL3_Shutdown();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
 

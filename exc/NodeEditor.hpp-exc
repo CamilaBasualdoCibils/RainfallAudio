@@ -3,6 +3,7 @@
 #include "Node.hpp"
 #include "glm/fwd.hpp"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include <any>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/member.hpp>
@@ -26,13 +27,22 @@ class NodeEditor
     ImVec4 BackgroundColor = rgb(20, 20, 20);
     ImVec4 LineColor = rgb(126, 126, 126);
 
-    glm::vec2 CameraLocation = {0, 0};
-    float CameraScaleX = 10;
-    float CameraScaleX_target = 10;
-    const glm::vec2 CameraScaleRange = {5, 100};
-    glm::mat3 World2Screen, Screen2World;
+    //glm::vec2 CameraLocation = {0, 0};
+    //float CameraScaleX = 10;
+    float CameraScaleX_target = 1;
+    const ImVec2 CameraScaleRange = {1, 2};
+    //glm::mat3 World2Screen, Screen2World;
+    float CameraScaleX;
+    ImVec2 CameraPos = {0,0};
+    ImGuiWindow* node_editorWindow;
+    struct GraphNode
+    {
+      std::shared_ptr<Old> node;
+      ImVec2 position;
+      bool Open = true;
+    };
     boost::multi_index_container<
-        std::shared_ptr<Node>,
+        std::shared_ptr<GraphNode>,
         boost::multi_index::indexed_by<boost::multi_index::sequenced<>
                                        // boost::multi_index::hashed_non_unique<boost::multi_index::tag<NodeByType>,
                                        // NodeTypeExtractor>
@@ -44,8 +54,14 @@ class NodeEditor
     bool Draw(const std::string_view label, ImVec2 size = {0, -1});
 
   private:
+    void CameraControls();
+    void NodeSearch();
     void Controls();
     void DrawNodes();
-    void AddNode(std::shared_ptr<Node> node);
+    void DrawGraphNode(GraphNode &node);
     template <typename T> void AddNode() { AddNode(std::make_shared<T>()); }
+    ImVec2 Map2Screen(ImVec2 v, bool dirOnly,bool apply_aspect_ration =true);
+    ImVec2 Screen2Map(ImVec2 v, bool dirOnly,bool apply_aspect_ration =true);
 };
+
+

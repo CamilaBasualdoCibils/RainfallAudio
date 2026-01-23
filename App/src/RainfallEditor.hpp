@@ -4,12 +4,12 @@
 #include "GL.hpp"
 #include "GLFW/glfw3.h"
 #include "misc/Singleton.hpp"
-class RainfallEditor :public AppWindow, public Singleton<RainfallEditor> {
+class RainfallEditor : public Singleton<RainfallEditor> {
 double DeltaTime;
 public:
   RainfallEditor();
 
-  void Run();
+  int Run(int& argc,char**argv);
   double GetDeltaTime() const {return DeltaTime;}
   double Getime() const {return glfwGetTime();}
 };

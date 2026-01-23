@@ -1,12 +1,5 @@
 include(FetchContent)
 Set(FETCHCONTENT_QUIET FALSE)
-#ImNodeFlow
-#FetchContent_Declare(ImNodeFlow
-#     GIT_REPOSITORY "https://github.com/Fattorino/ImNodeFlow.git"
-#    GIT_PROGRESS TRUE
-#)
-##FetchContent_Populate(ImNodeFlow)
-#FetchContent_MakeAvailable(ImNodeFlow)
 
 
 # ImGui

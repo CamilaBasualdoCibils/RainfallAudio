@@ -1,11 +1,13 @@
 #pragma once
 
+//#include "Node/NodeFlow.hpp"
 #include "misc/Singleton.hpp"
-#include "Node/NodeEditor.hpp"
+
 
 class GUI : public Singleton<GUI>
 {
-  NodeEditor node_editor;
+
+  //NodeFlowView node_flow;
   public:
     void Draw();
 

@@ -4,9 +4,9 @@ Set(FETCHCONTENT_QUIET FALSE)
 set(BOOST_INCLUDE_LIBRARIES bimap describe dynamic_bitset flyweight math multi_array multi_index stacktrace static_string)
 set(BOOST_ENABLE_CMAKE ON)
 FetchContent_Declare(
-  Boost
-  GIT_REPOSITORY https://github.com/boostorg/boost.git
-  GIT_TAG boost-1.90.0
-  GIT_PROGRESS TRUE
-)
+        Boost
+        URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.gz
+        USES_TERMINAL_DOWNLOAD TRUE
+        DOWNLOAD_NO_EXTRACT FALSE
+      )
 FetchContent_MakeAvailable(Boost)

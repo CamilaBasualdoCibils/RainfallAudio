@@ -1,0 +1,79 @@
+#pragma once
+
+#include "GL.hpp"
+#include "glm/fwd.hpp"
+#include "imgui.h"
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/static_string.hpp>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <typeindex>
+class OldNode
+{
+  public:
+    struct IPin
+    {
+        std::string Name;
+        std::type_index type;
+        IPin(const std::string_view _name, std::type_index type) : Name(_name), type(type) {}
+    };
+    template <typename T> struct Pin : IPin
+    {
+
+        Pin(const std::string_view _name) : IPin(_name, typeid(T)) {}
+    };
+
+  protected:
+    template <typename T> Pin<T> &AddInput(const std::string_view name)
+    {
+        std::shared_ptr<Pin<T>> pin = std::make_shared<Pin<T>>(name);
+        InputPins.push_back(pin);
+        return *pin;
+    }
+    template <typename T> Pin<T> &AddOutput(const std::string_view name)
+    {
+        std::shared_ptr<Pin<T>> pin = std::make_shared<Pin<T>>(name);
+        OutputPins.push_back(pin);
+        return *pin;
+    }
+
+    virtual void DrawPreview() = 0;
+
+  public:
+    virtual std::string GetTitle() const = 0;
+    OldNode() = default;
+    virtual ~OldNode() = default;
+    void DrawNode();
+
+    uint32_t GetInputCount() const { return InputPins.size(); }
+    uint32_t GetOutputCount() const { return OutputPins.size(); }
+    void ForEach_Input(std::function<void(const IPin &)> lambda) const
+    {
+        for (const auto &in : InputPins)
+        {
+            lambda(*in);
+        }
+    }
+    void ForEach_Output(std::function<void(const IPin &)> lambda) const
+    {
+        for (const auto &in : OutputPins)
+        {
+            lambda(*in);
+        }
+    }
+
+  private:
+    boost::multi_index_container<std::shared_ptr<IPin>,
+                                 boost::multi_index::indexed_by<boost::multi_index::sequenced<>>>
+        InputPins;
+    boost::multi_index_container<std::shared_ptr<IPin>,
+                                 boost::multi_index::indexed_by<boost::multi_index::sequenced<>>>
+        OutputPins;
+    // std::vector<
+};
