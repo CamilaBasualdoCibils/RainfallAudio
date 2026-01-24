@@ -13,7 +13,7 @@ class OutputNode : public AudioNode
     OutputNode(NodeFlow *flow, NodeID id) : AudioNode(flow, id)
     {
 
-        input = AddPort<AudioStream>();
+        input = AddInputPort<AudioStream>();
         input->SetDirection(PortDir::eInput);
         input->setPos(QPointF{boundingRect().x(), 0});
     }

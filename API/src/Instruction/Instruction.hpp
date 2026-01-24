@@ -5,6 +5,7 @@
 #include "boost/container/small_vector.hpp"
 #include <memory>
 #include <string_view>
+#include <typeindex>
 class IInstruction
 {
 
@@ -29,7 +30,7 @@ class IInstruction
     boost::container::small_vector<std::shared_ptr<IVariable>, 15> inputs;
     boost::container::small_vector<std::shared_ptr<IVariable>, 15> outputs;
 };
-
+template <typename T>
 class Instruction
 {
 

@@ -51,19 +51,19 @@ int RainfallEditor::Run(int &argc, char **argv)
 
     NodeFlowView *view = new NodeFlowView(nodeflow, &window);
     window.setCentralWidget(view);
-    view->setWindowTitle("Qt Node Editor Example");
+    view->setWindowTitle("Rainfall Editor");
     view->resize(800, 600);
     view->show();
     window.show();
 
-    //QMainWindow *window2 = new QMainWindow();
-    //NodeFlowView *view2 = new NodeFlowView(nodeflow, window2);
-    //view2->setRenderHint(QPainter::Antialiasing);
-    //window2->setCentralWidget(view2);
-    //window2->setWindowTitle("Node Editor Window 2");
-    //window2->resize(800, 600);
-    //window2->move(850, 50); // offset so it doesn't cover the first window
-    //window2->show();
+    // QMainWindow *window2 = new QMainWindow();
+    // NodeFlowView *view2 = new NodeFlowView(nodeflow, window2);
+    // view2->setRenderHint(QPainter::Antialiasing);
+    // window2->setCentralWidget(view2);
+    // window2->setWindowTitle("Node Editor Window 2");
+    // window2->resize(800, 600);
+    // window2->move(850, 50); // offset so it doesn't cover the first window
+    // window2->show();
 
     return app.exec();
 }

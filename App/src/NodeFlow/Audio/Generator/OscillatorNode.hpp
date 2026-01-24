@@ -16,9 +16,8 @@ class OscillatorNode : public AudioNode
   public:
     OscillatorNode(NodeFlow *flow, NodeID id) : AudioNode(flow, id)
     {
-        OutputPort = AddPort<AudioStream>();
+        OutputPort = AddOutputPort<AudioStream>();
         OutputPort->setPos(QPointF{-boundingRect().x(), 0});
-        OutputPort->SetDirection(PortDir::eOutput);
         // AddOutput<AudioStream>("Output");
         // AddInput<AudioStream>("Input");
     }

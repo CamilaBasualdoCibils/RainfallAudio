@@ -13,9 +13,9 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 }
 QRectF Node::boundingRect() const
 {
-    return QRectF(-60, -250.0f/2, 120, 250); // width 120, height 60
+    return QRectF(-60, -250.0f / 2, 120, 250); // width 120, height 60
 }
-Node::Node(NodeFlow *flow,NodeID id) : ParentFlow(flow),id(id)
+Node::Node(NodeFlow *flow, NodeID id) : ParentFlow(flow), id(id)
 {
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable |
              QGraphicsItem::ItemSendsGeometryChanges);

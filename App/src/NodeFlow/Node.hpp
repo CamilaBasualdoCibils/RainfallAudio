@@ -39,8 +39,22 @@ class Node : public QGraphicsItem
         return nullptr;
     }
 
+
   protected:
-    template <typename T> std::shared_ptr<Port<T>> AddPort()
+    template <typename T> std::shared_ptr<Port<T>> AddInputPort()
+    {
+        std::shared_ptr<Port<T>> port = AddPort<T>();
+        port->SetDirection(PortDir::eInput);
+        return port;
+    }
+     template <typename T> std::shared_ptr<Port<T>> AddOutputPort()
+    {
+        std::shared_ptr<Port<T>> port = AddPort<T>();
+        port->SetDirection(PortDir::eOutput);
+        return port;
+    }
+  private:
+     template <typename T> std::shared_ptr<Port<T>> AddPort()
     {
         std::shared_ptr<Port<T>> port = std::make_shared<Port<T>>(ParentFlow, id, ReservePortID());
         ports.insert(port);
@@ -49,7 +63,6 @@ class Node : public QGraphicsItem
         return port;
     }
 
-  private:
     QString m_title = "Node";
     struct PortsByID
     {
