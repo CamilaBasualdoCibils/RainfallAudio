@@ -17,9 +17,12 @@
 #include <QMessageBox>
 #include <QWidget>
 #include <QWindow>
+#include "Compiler/EGTest.hpp"
+#include "NodeFlow/NodeFlowEditor.hpp"
 RainfallEditor::RainfallEditor() {}
 int RainfallEditor::Run(int &argc, char **argv)
 {
+    EGTest();
     QApplication app(argc, argv);
 
     // Create main window
@@ -49,11 +52,13 @@ int RainfallEditor::Run(int &argc, char **argv)
     NodeFlow *nodeflow = new NodeFlow(&window);
     nodeflow->setSceneRect(-500, -500, 1000, 1000);
 
-    NodeFlowView *view = new NodeFlowView(nodeflow, &window);
-    window.setCentralWidget(view);
-    view->setWindowTitle("Rainfall Editor");
-    view->resize(800, 600);
-    view->show();
+    NodeFlowEditor* editor = new NodeFlowEditor(nodeflow);
+
+
+    window.setCentralWidget(editor);
+    editor->setWindowTitle("Rainfall Editor");
+    editor->resize(800, 600);
+    editor->show();
     window.show();
 
     // QMainWindow *window2 = new QMainWindow();
