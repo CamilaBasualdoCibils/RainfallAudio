@@ -14,7 +14,7 @@ class AudioStreamExport : public IInstruction
     AudioStreamExport(ExecutionGraph &eg, InstructionID ID)
         : IInstruction(eg, ID)
     {
-        DeclareInput<AudioStream, Inputs::eWaveOut>("WaveOutput");
+        DeclareInput<AudioStream, Inputs::eWaveOut>("Export Stream");
     }
-    std::string GetLabel() const override { return "AudioStreamExport"; }
+    std::string GetLabel() const override { return "Audio Stream Export"; }
 };

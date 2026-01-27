@@ -36,10 +36,6 @@ void ExecutionGraph::internal_CreateReference(
         (OutputMemberVariables.get<ByGlobalID>().contains(from_global_var_id) ||
          constants.get<ByGlobalID>().contains(from_global_var_id)) &&
         "No Global variable by that ID");
-    for (const auto &v : OutputMemberVariables)
-    {
-        std::cout << v->CreatorID << " " << v->memberHash << std::endl;
-    }
 
     assert(instructions.get<ByInstructionID>().contains(to_instruction_id) &&
            "Invalid Instruction ID");
@@ -48,7 +44,7 @@ void ExecutionGraph::internal_CreateReference(
            "Invalid Member Variable Hash");
     IReference ref;
     ref.ToInstructionID = to_instruction_id;
-    ref.ToInstructionMemberVarID = to_instruction_member_var_hash;
+    ref.ToInstructionMemberHash = to_instruction_member_var_hash;
     ref.FromVarGlobalID = from_global_var_id;
     references.push_back(ref);
     // const auto &instructonView = memberVariables.get<ByInstructionID>();
@@ -61,15 +57,15 @@ std::string ExecutionGraph::EmitDot()
     std::ostringstream dot;
 
     dot << "digraph ExecutionGraph {\n";
-    dot << "  rankdir=LR;\n";
-    dot << "  node [fontname=\"monospace\"];\n\n";
+    dot << "  rankdir=UD;\n";
+    // dot << "  node [fontname=\"monospace\"];\n\n";
 
     // --- constants nodes ---
     dot << "  // constants\n";
     for (const auto &cons : constants)
     {
-        dot << "  var_" << cons->GlobalID << " [label=\"" << cons->Name
-            << "\", shape=ellipse];\n";
+        dot << "  var_" << cons->GlobalID <<" " <<cons->GetValue().EmitDOT() <<"\n";
+        
     }
 
     dot << "\n";
@@ -79,8 +75,8 @@ std::string ExecutionGraph::EmitDot()
     {
         dot << "  var_" << var->GlobalID << " [label=\"" << var->Name
             << "\", shape=ellipse];\n";
-            dot << "  inst_" << var->CreatorID << " -> var_"
-            << var->GlobalID << ";\n";
+        dot << "  inst_" << var->CreatorID << " -> var_" << var->GlobalID
+            << "[style=dashed];\n";
     }
 
     dot << "\n";
@@ -96,14 +92,23 @@ std::string ExecutionGraph::EmitDot()
     dot << "\n";
 
     // --- Edges: variable -> instruction ---
-    dot << "  // Uses\n";
-    for (const auto &reference : references)
     {
-        dot << "  var_" << reference.FromVarGlobalID << " -> inst_"
-            << reference.ToInstructionID << ";\n";
-    }
+        const auto &view = instructions.get<ByInstructionID>();
+        dot << "  // Uses\n";
+        for (const auto &reference : references)
+        {
+            dot << "  var_" << reference.FromVarGlobalID << " -> inst_"
+                << reference.ToInstructionID
+                << " [ label=\""
+                << view.find(reference.ToInstructionID)
+                       ->get()
+                       ->GetInputFromHash(reference.ToInstructionMemberHash)
+                       .Name
+                << "\"];\n";
+        }
 
-    dot << "}\n";
+        dot << "}\n";
+    }
 
     return dot.str();
 }

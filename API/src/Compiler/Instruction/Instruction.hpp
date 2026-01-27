@@ -95,6 +95,7 @@ struct IInstruction
         }
     }
     bool hasInputWithHash(MemberVarHash hash) const {return inputs.get<VariableByKey>().contains(hash);}
+    const InputEntry& GetInputFromHash(MemberVarHash hash) const {return *inputs.get<VariableByKey>().find(hash); }
     InstructionID GetID() const { return ID; }
     virtual std::string GetLabel() const = 0;
   private:

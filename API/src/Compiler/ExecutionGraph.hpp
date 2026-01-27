@@ -30,7 +30,7 @@ class ExecutionGraph
     class value_iterator
     {
       public:
-        value_iterator(ExecutionGraph &eg, std::shared_ptr<IValue> d)
+        value_iterator(ExecutionGraph &eg, std::shared_ptr<IVariable> d)
             : eg(eg), data(d)
         {
         }
@@ -40,7 +40,7 @@ class ExecutionGraph
         ExecutionGraph &eg;
 
       private:
-        std::shared_ptr<IValue> data;
+        std::shared_ptr<IVariable> data;
     };
     class i_inst_iterator
     {
@@ -111,6 +111,11 @@ class ExecutionGraph
         constants.insert(con);
         return value_iterator(*this, con);
     }
+    template <typename T>
+    [[nodiscard]] value_iterator MakeConstant(T v)
+    {
+        return MakeConstant("",v);
+    }
 
     std::string EmitDot();
 
@@ -157,8 +162,8 @@ class ExecutionGraph
         std::shared_ptr<IConstant>,
         boost::multi_index::indexed_by<boost::multi_index::ordered_unique<
             boost::multi_index::tag<ByGlobalID>,
-            boost::multi_index::member<IValue, GlobalVariableID,
-                                       &IValue::GlobalID>>>>;
+            boost::multi_index::member<IVariable, GlobalVariableID,
+                                       &IVariable::GlobalID>>>>;
 
     using MemberVarContainer = boost::multi_index_container<
         std::shared_ptr<IMemberVariable>,
@@ -166,8 +171,8 @@ class ExecutionGraph
 
             boost::multi_index::ordered_unique<
                 boost::multi_index::tag<ByGlobalID>,
-                boost::multi_index::member<IValue, GlobalVariableID,
-                                           &IValue::GlobalID>>,
+                boost::multi_index::member<IVariable, GlobalVariableID,
+                                           &IVariable::GlobalID>>,
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::tag<ByInstructionID>,
                 boost::multi_index::member<IMemberVariable, InstructionID,
@@ -190,7 +195,7 @@ class ExecutionGraph
         GlobalVariableID FromVarGlobalID;
         // To
         InstructionID ToInstructionID;
-        MemberVarHash ToInstructionMemberVarID;
+        MemberVarHash ToInstructionMemberHash;
     };
     using ReferenceContainer = boost::multi_index_container<
         IReference,
