@@ -1,15 +1,20 @@
 #pragma once
 
-
 #include "Compiler/Instruction/Instruction.hpp"
 #include "Compiler/Instruction/Values/AudioStream.hpp"
 #include "Compiler/Instruction/Values/Scalar.hpp"
-class AudioStreamExport: public IInstruction
+class AudioStreamExport : public IInstruction
 {
   public:
-
-    AudioStreamExport(ExecutionGraph& eg,InstructionID ID) : IInstruction(eg,ID)
+    enum class Inputs
     {
-        AddInput<AudioStream>("Output");
+        eWaveOut
+    };
+    const static inline std::string Output_VarName = "Output";
+    AudioStreamExport(ExecutionGraph &eg, InstructionID ID)
+        : IInstruction(eg, ID)
+    {
+        DeclareInput<AudioStream, Inputs::eWaveOut>("WaveOutput");
     }
+    std::string GetLabel() const override { return "AudioStreamExport"; }
 };

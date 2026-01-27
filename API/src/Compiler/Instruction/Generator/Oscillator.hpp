@@ -3,14 +3,24 @@
 
 #include "Compiler/Instruction/Values/AudioStream.hpp"
 #include "Compiler/Instruction/Values/Scalar.hpp"
+#include <cstdint>
 class Oscillator : public IInstruction
 {
   public:
-
-    Oscillator(ExecutionGraph& eg,InstructionID ID) : IInstruction(eg,ID)
+    enum class Inputs : uint16_t
     {
-        AddInput<Scalar>("Frequency");
-        AddInput<Scalar>("Amplitude");
-        AddOutput<AudioStream>("Wave");
+        eFrequency,
+        eAmpltiude
+    };
+    enum class Outputs : uint16_t
+    {
+        eWave
+    };
+    Oscillator(ExecutionGraph &eg, InstructionID ID) : IInstruction(eg, ID)
+    {
+        DeclareInput<Scalar, Inputs::eFrequency>("Frequency");
+        DeclareInput<Scalar, Inputs::eAmpltiude>("Amplitude");
+        DeclareOutput<AudioStream, Outputs::eWave>();
     }
+    std::string GetLabel() const override { return "Oscillator"; }
 };

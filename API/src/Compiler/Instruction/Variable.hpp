@@ -8,37 +8,34 @@ struct IValue
 {
     std::string Name;
     std::type_index data_type_index;
-    IValue(const std::type_index &type, const std::string_view name)
-        : Name(name), data_type_index(type)
+    GlobalVariableID GlobalID;
+    IValue(GlobalVariableID id, const std::type_index &type, const std::string_view name)
+        : GlobalID(id), Name(name), data_type_index(type)
     {
     }
-    const std::string &getName() const { return Name; }
 };
 
 struct IMemberVariable : IValue
 {
 
     InstructionID CreatorID;
-    ScopeVariableID ID;
-    IMemberVariable(InstructionID CreatorID, ScopeVariableID ID, const std::type_index &type,
-                    const std::string_view name)
-        : IValue(type, name), CreatorID(CreatorID), ID(ID) {};
-    InstructionID getCreatorID() const { return CreatorID; }
-    ScopeVariableID getID() const { return ID; }
+    MemberVarHash memberHash;
+    IMemberVariable(GlobalVariableID GlobalID, InstructionID CreatorID, MemberVarHash memberHash,
+                    const std::type_index &type, const std::string_view name)
+        : IValue(GlobalID, type, name), CreatorID(CreatorID), memberHash(memberHash) {};
 };
 
 struct IConstant : IValue
 {
-    ScopeVariableID ID;
-    IConstant(ScopeVariableID id, const std::type_index &type, const std::string_view name)
-        : IValue(type, name), ID(id)
+    IConstant(GlobalVariableID id, const std::type_index &type, const std::string_view name)
+        : IValue(id, type, name)
     {
     }
 };
 template <typename DataType> struct Constant : IConstant
 {
     DataType value;
-    Constant(ScopeVariableID id, const std::type_index &type, const std::string_view name,
+    Constant(GlobalVariableID id, const std::type_index &type, const std::string_view name,
              const DataType &value)
         : IConstant(id, type, name), value(value)
     {

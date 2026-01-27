@@ -9,14 +9,17 @@
 #include "boost/multi_index/hashed_index.hpp"
 #include "boost/multi_index/mem_fun.hpp"
 #include "boost/multi_index/member.hpp"
+#include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index/tag.hpp"
 #include "boost/multi_index_container_fwd.hpp"
+#include <cassert>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <taskflow/taskflow.hpp>
+#include <tuple>
 #include <utility>
 class ExecutionGraph;
 
@@ -27,7 +30,11 @@ class ExecutionGraph
     class value_iterator
     {
       public:
-        value_iterator(ExecutionGraph &eg, std::shared_ptr<IValue> d) : eg(eg), data(d) {}
+        value_iterator(ExecutionGraph &eg, std::shared_ptr<IValue> d)
+            : eg(eg), data(d)
+        {
+        }
+        GlobalVariableID GetGlobalID() const { return data->GlobalID; }
 
       protected:
         ExecutionGraph &eg;
@@ -39,15 +46,21 @@ class ExecutionGraph
     {
 
       public:
-        i_inst_iterator(ExecutionGraph &eg, std::shared_ptr<IInstruction> d) : eg(eg), data(d) {}
+        i_inst_iterator(ExecutionGraph &eg, std::shared_ptr<IInstruction> d)
+            : eg(eg), data(d)
+        {
+        }
         IInstruction *operator->() { return data.get(); };
         IInstruction const *operator->() const { return data.get(); };
-        void SetInput(std::string_view a, value_iterator v) {
-          
-        }
-        value_iterator GetOutput(std::string_view varName)
+        template <auto Key> void SetInput(value_iterator v)
         {
-            return eg.internal_GetMemberVar(data->GetID(), varName);
+            eg.internal_CreateReference(v.GetGlobalID(), data->GetID(),
+                                        IInstruction::HashFromKey<Key>());
+        }
+        template <auto Key> value_iterator GetOutput()
+        {
+            return eg.internal_GetMemberVar(data->GetID(),
+                                            IInstruction::HashFromKey<Key>());
         }
 
       protected:
@@ -59,7 +72,10 @@ class ExecutionGraph
     template <typename T> class inst_iterator : public i_inst_iterator
     {
       public:
-        inst_iterator(ExecutionGraph &eg, std::shared_ptr<T> d) : i_inst_iterator(eg, d) {}
+        inst_iterator(ExecutionGraph &eg, std::shared_ptr<T> d)
+            : i_inst_iterator(eg, d)
+        {
+        }
         T *operator->() { return tdata.get(); };
         T const *operator->() const { return tdata.get(); };
 
@@ -71,15 +87,18 @@ class ExecutionGraph
     ExecutionGraph() {}
     template <typename T> [[nodiscard]] inst_iterator<T> AddInstruction()
     {
-        std::shared_ptr<T> orig_ins = std::make_shared<T>(*this, ReserveInstructionID());
+        std::shared_ptr<T> orig_ins =
+            std::make_shared<T>(*this, ReserveInstructionID());
         std::shared_ptr<IInstruction> ins = orig_ins;
-        instructions.push_back(ins);
+        instructions.insert(ins);
         ins->ForEach_Output(
             [&](const IInstruction::OutputEntry &e)
             {
-                std::shared_ptr<IMemberVariable> val = std::make_shared<IMemberVariable>(
-                    ins->GetID(), ReserveVariableID(), e.data_type_index.value(), e.Name);
-                memberVariables.insert(val);
+                std::shared_ptr<IMemberVariable> val =
+                    std::make_shared<IMemberVariable>(
+                        ReserveVariableID(), ins->GetID(), e.KeyHash,
+                        e.data_type_index.value(), e.Name);
+                OutputMemberVariables.insert(val);
             });
         return inst_iterator<T>(*this, orig_ins);
     }
@@ -87,71 +106,98 @@ class ExecutionGraph
     template <typename T>
     [[nodiscard]] value_iterator MakeConstant(const std::string_view name, T v)
     {
-        std::shared_ptr<Constant<T>> con =
-            std::make_shared<Constant<T>>(ReserveVariableID(), typeid(T), name, v);
-        constants.push_back(con);
+        std::shared_ptr<Constant<T>> con = std::make_shared<Constant<T>>(
+            ReserveVariableID(), typeid(T), name, v);
+        constants.insert(con);
         return value_iterator(*this, con);
     }
 
-    std::string EmitDot() { return ""; }
+    std::string EmitDot();
 
   private:
     [[nodiscard]] value_iterator internal_GetMemberVar(InstructionID ins_id,
-                                                       ScopeVariableID var_id);
-    [[nodiscard]] value_iterator internal_GetMemberVar(InstructionID ins_id,
-                                                       const std::string_view str);
+                                                       MemberVarHash var_id);
+    [[nodiscard]] value_iterator internal_GetGlobalVar(GlobalVariableID id);
+    [[nodiscard]] value_iterator
+    internal_GetMemberVar(InstructionID ins_id, const std::string_view str);
+    void internal_CreateReference(GlobalVariableID from_global_var_id,
+                                  InstructionID to_instruction_id,
+                                  MemberVarHash to_instruction_member_var_hash);
     InstructionID NextInstructionID = 0;
-    ScopeVariableID NextVariableID = 0;
+    GlobalVariableID NextVariableID = 0;
     InstructionID ReserveInstructionID() { return NextInstructionID++; }
-    ScopeVariableID ReserveVariableID() { return NextVariableID++; }
+    GlobalVariableID ReserveVariableID() { return NextVariableID++; }
 
     struct ByInstructionID
     {
     };
-    struct ByScopeID
+    struct ByGlobalID
+    {
+    };
+    struct ByMemberID
+    {
+    };
+    struct ByInstruction_MemberHash_Pair
     {
     };
     struct ByType
     {
     };
-    using InstructionContainer =
-        boost::multi_index_container<std::shared_ptr<IInstruction>,
-                                     boost::multi_index::indexed_by<boost::multi_index::sequenced<
-                                         boost::multi_index::tag<ByType>
-                                         // boost::multi_index::member<IInstruction,
-                                         // std::type_index,&InstructionInstance::instruction_type>
-                                         >>>;
+    using InstructionContainer = boost::multi_index_container<
+        std::shared_ptr<IInstruction>,
+        boost::multi_index::indexed_by<boost::multi_index::ordered_unique<
+            boost::multi_index::tag<ByInstructionID>,
+            boost::multi_index::const_mem_fun<IInstruction, InstructionID,
+                                              &IInstruction::GetID>
+            // boost::multi_index::member<IInstruction,
+            // std::type_index,&InstructionInstance::instruction_type>
+            >>>;
 
     using ConstantContainer = boost::multi_index_container<
         std::shared_ptr<IConstant>,
-        boost::multi_index::indexed_by<boost::multi_index::sequenced<>>>;
+        boost::multi_index::indexed_by<boost::multi_index::ordered_unique<
+            boost::multi_index::tag<ByGlobalID>,
+            boost::multi_index::member<IValue, GlobalVariableID,
+                                       &IValue::GlobalID>>>>;
 
     using MemberVarContainer = boost::multi_index_container<
         std::shared_ptr<IMemberVariable>,
         boost::multi_index::indexed_by<
-            boost::multi_index::hashed_non_unique<
+
+            boost::multi_index::ordered_unique<
+                boost::multi_index::tag<ByGlobalID>,
+                boost::multi_index::member<IValue, GlobalVariableID,
+                                           &IValue::GlobalID>>,
+            boost::multi_index::ordered_non_unique<
                 boost::multi_index::tag<ByInstructionID>,
                 boost::multi_index::member<IMemberVariable, InstructionID,
                                            &IMemberVariable::CreatorID>>,
-            boost::multi_index::hashed_non_unique<
-                boost::multi_index::tag<ByScopeID>,
-                boost::multi_index::member<IMemberVariable, ScopeVariableID, &IMemberVariable::ID>>
+
+            boost::multi_index::hashed_unique<
+                boost::multi_index::tag<ByInstruction_MemberHash_Pair>,
+                boost::multi_index::composite_key<
+                    IMemberVariable,
+                    boost::multi_index::member<IMemberVariable, InstructionID,
+                                               &IMemberVariable::CreatorID>,
+                    boost::multi_index::member<IMemberVariable, MemberVarHash,
+                                               &IMemberVariable::memberHash>>>
 
             >>;
 
     struct IReference
     {
         // From
-        ScopeVariableID VariableID;
+        GlobalVariableID FromVarGlobalID;
         // To
-        InstructionID instructionID;
-        MemberVariableID instructionInputID;
+        InstructionID ToInstructionID;
+        MemberVarHash ToInstructionMemberVarID;
     };
     using ReferenceContainer = boost::multi_index_container<
-        IReference, boost::multi_index::indexed_by<boost::multi_index::sequenced<>>>;
+        IReference,
+        boost::multi_index::indexed_by<boost::multi_index::sequenced<>>>;
 
     InstructionContainer instructions;
     ConstantContainer constants;
-    MemberVarContainer memberVariables;
+    MemberVarContainer OutputMemberVariables;
     ReferenceContainer references;
 };

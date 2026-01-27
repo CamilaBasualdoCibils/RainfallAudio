@@ -18,7 +18,7 @@ void EGTest()
     //// set its input to a constant
     const auto const_var = eg.MakeConstant<Scalar>("a", 0.5f);
 
-    oscillator.SetInput("Amplitude", const_var);
+    oscillator.SetInput<Oscillator::Inputs::eAmpltiude>(const_var);
 
     //// Add Audio Stream Export instruction
     ExecutionGraph::inst_iterator<AudioStreamExport> audio_export =
@@ -26,10 +26,9 @@ void EGTest()
 
     //
     // set its input to the output of Oscillator
-    auto oscillator_output =
-        oscillator.GetOutput("wave");
-        
-    audio_export.SetInput("output", oscillator_output);
+    auto oscillator_output = oscillator.GetOutput<Oscillator::Outputs::eWave>();
+
+    audio_export.SetInput<AudioStreamExport::Inputs::eWaveOut>(oscillator_output);
     //
     // compile
     // RainfallCompiler::Get().Compile(eg.EmitLLVM());
