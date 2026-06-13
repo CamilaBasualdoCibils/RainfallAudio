@@ -5,7 +5,6 @@
 #include "NodeFlow/Node.hpp"
 #include "NodeFlow/Port.hpp"
 #include "NodeFlow/RegisterNode.hpp"
-#include "imgui.h"
 #include <iostream>
 #include <qpoint.h>
 

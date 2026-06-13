@@ -23,6 +23,7 @@ target_include_directories(${API_NAME}
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
         ${portaudio_SOURCE_DIR}/include
+        ${LLVM_INCLUDE_DIRS}
 )
 
 # --- Link libraries ---
@@ -30,13 +31,17 @@ target_link_libraries(${API_NAME}
     PUBLIC
         portaudio
         BrassUtils::BrassUtils
-        Taskflow::Taskflow
+        #Taskflow::Taskflow
         Boost::headers
         Boost::bimap
         Boost::math
         Boost::static_string
         Boost::graph
+        ${LLVM_LIBS}
 )
-
+target_compile_definitions(${API_NAME}
+    PRIVATE
+        ${LLVM_DEFINITIONS}
+)
 # --- Optional compile flags from pkg-config ---
-target_compile_options(${API_NAME} PRIVATE ${PORTAUDIO_CFLAGS_OTHER})
+target_compile_options(${API_NAME} PRIVATE ${PORTAUDIO_CFLAGS_OTHER} ${LLVM_CXXFLAGS})

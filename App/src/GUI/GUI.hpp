@@ -1,7 +1,7 @@
 #pragma once
 
 //#include "Node/NodeFlow.hpp"
-#include "misc/Singleton.hpp"
+#include "Singleton.hpp"
 
 
 class GUI : public Singleton<GUI>

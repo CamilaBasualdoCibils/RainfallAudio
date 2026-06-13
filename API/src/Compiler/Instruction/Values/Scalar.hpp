@@ -1,6 +1,8 @@
 #pragma once
 #include "Value.hpp"
 #include <format>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Constant.h>
 // using Scalar = float;
 
 struct Scalar : Value<float>
@@ -11,4 +13,9 @@ struct Scalar : Value<float>
     {
         return std::format(R"([label={}, shape=ellipse])", value);
     }
+
+};
+
+struct Matrix4x4 : Value<float>
+{
 };

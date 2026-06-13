@@ -1,8 +1,7 @@
 
 #include "GUI.hpp"
-#include "GL.hpp"
+
 #include "RainfallEditor.hpp"
-#include "imgui.h"
 /*
 void GUI::Draw()
 {

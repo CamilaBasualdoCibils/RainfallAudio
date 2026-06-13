@@ -3,7 +3,7 @@
 
 #include "NodeFlow/IDs.hpp"
 #include "boost/multi_index/hashed_index.hpp"
-#include "misc/Singleton.hpp"
+#include "Singleton.hpp"
 #include <NodeFlow/Node.hpp>
 #include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/member.hpp>

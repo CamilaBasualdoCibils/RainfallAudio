@@ -15,22 +15,22 @@ target_include_directories(${EDITOR_NAME}
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
         # ${imgui_SOURCE_DIR}
         # ${implot_SOURCE_DIR}
-        ${glfw_SOURCE_DIR}/include
-        ${glew_SOURCE_DIR}/include
+        #${glfw_SOURCE_DIR}/include
+        #${glew_SOURCE_DIR}/include
         #${IMNODEFLOW_DIR}/include
-        ${imnodeflow_SOURCE_DIR}/include
+        #${imnodeflow_SOURCE_DIR}/include
 
 )
 # --- Link libraries ---
 target_link_libraries(${EDITOR_NAME}
     PRIVATE
         ${API_NAME}
-        glfw
-        glew_s
-        imgui_lib
-        implot_lib
+        #glfw
+        #glew_s
+        #imgui_lib
+        #implot_lib
         Boost::stacktrace_addr2line
-        OpenGL::GL
+        #OpenGL::GL
         Qt6::Widgets
 )
 target_compile_definitions(${EDITOR_NAME} PRIVATE GLEW_STATIC IMGUI_IMPL_OPENGL_LOADER_GLEW)

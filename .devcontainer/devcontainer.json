@@ -1,7 +1,7 @@
 
 {
   "name": "gpu-x11-dev",
-  "image": "nvidia/cuda:12.4.1-devel-ubuntu26.04",
+  //"image": "nvidia/cuda:12.4.1-devel-ubuntu26.04",
   "build": {
 		"dockerfile": "Dockerfile"
 	},
@@ -10,7 +10,9 @@
     "--gpus=all",
     "--env=DISPLAY",
     "--env=NVIDIA_DRIVER_CAPABILITIES=all",
-    "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw",
+    "--device=/dev/dri/renderD128",
+    "--device=/dev/dri/renderD129"
   ],
 
   "features": {

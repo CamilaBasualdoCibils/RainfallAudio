@@ -4,27 +4,44 @@
 #include "GUI/GUI.hpp"
 #include "NodeFlow/Node.hpp"
 #include "NodeFlow/NodeFlowView.hpp"
-#include "imgui.h"
 #include <iostream>
 #include <qgraphicsscene.h>
 #include <qwindowdefs.h>
 #include <stdexcept>
 
+#include "Compiler/EGTest.hpp"
+#include "NodeFlow/NodeFlowEditor.hpp"
 #include <NodeFlow/NodeFlow.hpp>
 #include <QApplication>
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QStyleFactory>
 #include <QWidget>
 #include <QWindow>
-#include "Compiler/EGTest.hpp"
-#include "NodeFlow/NodeFlowEditor.hpp"
 RainfallEditor::RainfallEditor() {}
 int RainfallEditor::Run(int &argc, char **argv)
 {
     EGTest();
     QApplication app(argc, argv);
+    app.setStyle(QStyleFactory::create("Breeze"));
 
+    // Dark palette
+    QPalette dark;
+    dark.setColor(QPalette::Window, QColor(53, 53, 53));
+    dark.setColor(QPalette::WindowText, Qt::white);
+    dark.setColor(QPalette::Base, QColor(35, 35, 35));
+    dark.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
+    dark.setColor(QPalette::ToolTipBase, Qt::white);
+    dark.setColor(QPalette::ToolTipText, Qt::white);
+    dark.setColor(QPalette::Text, Qt::white);
+    dark.setColor(QPalette::Button, QColor(53, 53, 53));
+    dark.setColor(QPalette::ButtonText, Qt::white);
+    dark.setColor(QPalette::BrightText, Qt::red);
+    dark.setColor(QPalette::Highlight, QColor(42, 130, 218));
+    dark.setColor(QPalette::HighlightedText, Qt::black);
+
+    app.setPalette(dark);
     // Create main window
     QMainWindow window;
     window.setWindowTitle("Qt6 Menu Example");
@@ -45,15 +62,16 @@ int RainfallEditor::Run(int &argc, char **argv)
     fileMenu->addAction(exitAction);
 
     // Connect actions
-    QObject::connect(newAction, &QAction::triggered,
-                     [&]() { QMessageBox::information(&window, "New", "New action triggered!"); });
-    QObject::connect(exitAction, &QAction::triggered, &app, &QApplication::quit);
+    QObject::connect(
+        newAction, &QAction::triggered, [&]()
+        { QMessageBox::information(&window, "New", "New action triggered!"); });
+    QObject::connect(exitAction, &QAction::triggered, &app,
+                     &QApplication::quit);
 
     NodeFlow *nodeflow = new NodeFlow(&window);
     nodeflow->setSceneRect(-500, -500, 1000, 1000);
 
-    NodeFlowEditor* editor = new NodeFlowEditor(nodeflow);
-
+    NodeFlowEditor *editor = new NodeFlowEditor(nodeflow);
 
     window.setCentralWidget(editor);
     editor->setWindowTitle("Rainfall Editor");

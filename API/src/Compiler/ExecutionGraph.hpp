@@ -2,9 +2,6 @@
 #include "Compiler/Instruction/Defines.hpp"
 #include "Instruction/Instruction.hpp"
 #include "Instruction/Variable.hpp"
-#include "boost/graph/adjacency_list.hpp"
-#include "boost/graph/detail/adjacency_list.hpp"
-#include "boost/graph/graph_selectors.hpp"
 #include "boost/multi_index/composite_key.hpp"
 #include "boost/multi_index/hashed_index.hpp"
 #include "boost/multi_index/mem_fun.hpp"
@@ -14,13 +11,14 @@
 #include "boost/multi_index/tag.hpp"
 #include "boost/multi_index_container_fwd.hpp"
 #include <cassert>
+#include <format>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <string_view>
-#include <taskflow/taskflow.hpp>
-#include <tuple>
-#include <utility>
+
+#include <iostream>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Module.h>
 class ExecutionGraph;
 
 class ExecutionGraph
@@ -109,15 +107,16 @@ class ExecutionGraph
         std::shared_ptr<Constant<T>> con = std::make_shared<Constant<T>>(
             ReserveVariableID(), typeid(T), name, v);
         constants.insert(con);
+
         return value_iterator(*this, con);
     }
-    template <typename T>
-    [[nodiscard]] value_iterator MakeConstant(T v)
+    template <typename T> [[nodiscard]] value_iterator MakeConstant(T v)
     {
-        return MakeConstant("",v);
+        return MakeConstant("", v);
     }
 
     std::string EmitDot();
+    std::unique_ptr<llvm::Module> EmitLLVM(llvm::LLVMContext &Context);
 
   private:
     [[nodiscard]] value_iterator internal_GetMemberVar(InstructionID ins_id,
@@ -137,9 +136,6 @@ class ExecutionGraph
     {
     };
     struct ByGlobalID
-    {
-    };
-    struct ByMemberID
     {
     };
     struct ByInstruction_MemberHash_Pair
@@ -166,7 +162,7 @@ class ExecutionGraph
                                        &IVariable::GlobalID>>>>;
 
     using MemberVarContainer = boost::multi_index_container<
-        std::shared_ptr<IMemberVariable>,
+        std::shared_ptr<IMemberVariable>, // what it stores
         boost::multi_index::indexed_by<
 
             boost::multi_index::ordered_unique<
@@ -184,11 +180,9 @@ class ExecutionGraph
                     IMemberVariable,
                     boost::multi_index::member<IMemberVariable, InstructionID,
                                                &IMemberVariable::CreatorID>,
-                    boost::multi_index::member<IMemberVariable, MemberVarHash,
-                                               &IMemberVariable::memberHash>>>
-
-            >>;
-
+                    boost::multi_index::member<
+                        IMemberVariable, MemberVarHash,
+                        &IMemberVariable::memberHash>>>>>;
     struct IReference
     {
         // From
@@ -197,12 +191,23 @@ class ExecutionGraph
         InstructionID ToInstructionID;
         MemberVarHash ToInstructionMemberHash;
     };
+    struct ReferenceByFromGlobalID
+    {
+    };
     using ReferenceContainer = boost::multi_index_container<
         IReference,
-        boost::multi_index::indexed_by<boost::multi_index::sequenced<>>>;
+        boost::multi_index::indexed_by<
+            boost::multi_index::hashed_non_unique<
+                boost::multi_index::tag<ReferenceByFromGlobalID>,
+                boost::multi_index::member<IReference, GlobalVariableID,
+                                           &IReference::FromVarGlobalID>>,
+            boost::multi_index::sequenced<>>>;
 
     InstructionContainer instructions;
     ConstantContainer constants;
     MemberVarContainer OutputMemberVariables;
     ReferenceContainer references;
+};
+class SubGraph : public IInstruction, public ExecutionGraph
+{
 };
